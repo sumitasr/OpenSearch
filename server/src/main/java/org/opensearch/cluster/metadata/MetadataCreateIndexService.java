@@ -345,8 +345,10 @@ public class MetadataCreateIndexService {
                                 request.index()
                             );
                         }
-                        logger.info("[Custom Log] MetadataCreateIndexService, createIndex latency: {} ms",
-                            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+                        logger.info(
+                            "[Custom Log] MetadataCreateIndexService, createIndex latency: {} ms",
+                            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+                        );
                         listener.onResponse(new CreateIndexClusterStateUpdateResponse(response.isAcknowledged(), shardsAcknowledged));
                     },
                     listener::onFailure

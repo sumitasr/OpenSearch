@@ -567,6 +567,7 @@ public class AllocationService {
 
         allocateExistingUnassignedShards(allocation);  // try to allocate existing shard copies first
         shardsAllocator.allocate(allocation);
+        logger.info("[Custom Log] AllocationService, reroute latency: {} ms", TimeValue.nsecToMSec(System.nanoTime() - rerouteStartTimeNS));
         clusterManagerMetrics.recordLatency(
             clusterManagerMetrics.rerouteHistogram,
             (double) Math.max(0, TimeValue.nsecToMSec(System.nanoTime() - rerouteStartTimeNS))
@@ -614,8 +615,10 @@ public class AllocationService {
                 getAllocatorForShard(shardRouting, allocation).allocateUnassigned(shardRouting, allocation, replicaIterator);
             }
         }
-        logger.info("[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
-            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+        logger.info(
+            "[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+        );
     }
 
     private void allocateAllUnassignedShards(RoutingAllocation allocation) {

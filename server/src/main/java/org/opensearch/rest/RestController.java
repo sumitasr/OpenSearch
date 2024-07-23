@@ -294,8 +294,10 @@ public class RestController implements HttpServerTransport.Dispatcher {
         try {
             long latencyStartTimeInNs = System.nanoTime();
             tryAllHandlers(request, channel, threadContext);
-            logger.info("[Custom Log] RestController, dispatchRequest latency: {} ms",
-                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+            logger.info(
+                "[Custom Log] RestController, dispatchRequest latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+            );
         } catch (Exception e) {
             try {
                 channel.sendResponse(new BytesRestResponse(channel, e));
@@ -384,8 +386,10 @@ public class RestController implements HttpServerTransport.Dispatcher {
             }
             long latencyStartTimeInNs = System.nanoTime();
             handler.handleRequest(request, responseChannel, client);
-            logger.info("[Custom Log] RestController, handleRequest latency: {} ms",
-                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+            logger.debug(
+                "[Custom Log] RestController, handleRequest latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+            );
         } catch (Exception e) {
             responseChannel.sendResponse(new BytesRestResponse(responseChannel, e));
         }

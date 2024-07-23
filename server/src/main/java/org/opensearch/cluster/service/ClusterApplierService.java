@@ -562,9 +562,14 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
         }
 
         logger.trace("connecting to nodes of cluster state with version {}", newClusterState.version());
+        long connectToNodesStartTimeNS = System.nanoTime();
         try (TimingHandle ignored = stopWatch.timing("connecting to new nodes")) {
             connectToNodesAndWait(newClusterState);
         }
+        logger.info(
+            "[Custom Log] ClusterApplierService, connectToNodesAndWait latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - connectToNodesStartTimeNS)
+        );
 
         // nothing to do until we actually recover from the gateway or any other block indicates we need to disable persistency
         if (clusterChangedEvent.state().blocks().disableStatePersistence() == false && clusterChangedEvent.metadataChanged()) {
@@ -574,11 +579,20 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
                 clusterSettings.applySettings(incomingSettings);
             }
         }
-
+        long appliersStartTimeNS = System.nanoTime();
         logger.debug("apply cluster state with version {}", newClusterState.version());
         callClusterStateAppliers(clusterChangedEvent, stopWatch);
+        logger.info(
+            "[Custom Log] ClusterApplierService, callClusterStateAppliers latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - appliersStartTimeNS)
+        );
 
+        long disconnectStartTimeNS = System.nanoTime();
         nodeConnectionsService.disconnectFromNodesExcept(newClusterState.nodes());
+        logger.info(
+            "[Custom Log] ClusterApplierService, disconnectFromNodesExcept latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - disconnectStartTimeNS)
+        );
 
         assert newClusterState.coordinationMetadata()
             .getLastAcceptedConfiguration()
@@ -591,8 +605,12 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
 
         logger.debug("set locally applied cluster state to version {}", newClusterState.version());
         state.set(newClusterState);
-
+        long listenersStartTimeNS = System.nanoTime();
         callClusterStateListeners(clusterChangedEvent, stopWatch);
+        logger.info(
+            "[Custom Log] callClusterStateListeners latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - listenersStartTimeNS)
+        );
     }
 
     protected void connectToNodesAndWait(ClusterState newClusterState) {

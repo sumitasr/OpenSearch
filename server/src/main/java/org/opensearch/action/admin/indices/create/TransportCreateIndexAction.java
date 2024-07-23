@@ -46,7 +46,6 @@ import org.opensearch.common.inject.Inject;
 import org.opensearch.common.unit.TimeValue;
 import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.common.io.stream.StreamInput;
-import org.opensearch.rest.RestController;
 import org.opensearch.threadpool.ThreadPool;
 import org.opensearch.transport.TransportService;
 
@@ -135,8 +134,10 @@ public class TransportCreateIndexAction extends TransportClusterManagerNodeActio
                 response -> new CreateIndexResponse(response.isAcknowledged(), response.isShardsAcknowledged(), indexName)
             )
         );
-        logger.info("[Custom Log] TransportCreateIndexAction, clusterManagerOperation latency: {} ms",
-            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+        logger.info(
+            "[Custom Log] TransportCreateIndexAction, clusterManagerOperation latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+        );
     }
 
 }

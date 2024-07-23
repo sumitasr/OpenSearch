@@ -227,8 +227,7 @@ public class MasterService extends AbstractLifecycleComponent {
             ClusterStateTaskExecutor<Object> taskExecutor = (ClusterStateTaskExecutor<Object>) batchingKey;
             List<UpdateTask> updateTasks = (List<UpdateTask>) tasks;
             runTasks(new TaskInputs(taskExecutor, updateTasks, taskSummaryGenerator));
-            logger.info("[Custom Log] MasterService, run latency: {} ms",
-                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
+            logger.info("[Custom Log] MasterService, run latency: {} ms", TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
         }
 
         class UpdateTask extends BatchedTask {
@@ -329,6 +328,11 @@ public class MasterService extends AbstractLifecycleComponent {
         final TimeValue computationTime = getTimeSince(computationStartTime);
         logExecutionTime(computationTime, "compute cluster state update", shortSummary);
 
+        logger.info(
+            "[Custom Log] Cluster state compute - latency: {} ms, operation : {}",
+            computationTime.getMillis(),
+            taskInputs.executor.getClass().getSimpleName()
+        );
         clusterManagerMetrics.recordLatency(
             clusterManagerMetrics.clusterStateComputeHistogram,
             (double) computationTime.getMillis(),
@@ -394,6 +398,7 @@ public class MasterService extends AbstractLifecycleComponent {
             stateStats.stateUpdateTook(durationMillis);
             stateStats.stateUpdated();
             clusterManagerMetrics.recordLatency(clusterManagerMetrics.clusterStatePublishHistogram, (double) durationMillis);
+            logger.info("[Custom Log] Cluster state publish - latency: {} ms", durationMillis);
         } catch (Exception e) {
             stateStats.stateUpdateFailed();
             onPublicationFailed(clusterChangedEvent, taskOutputs, startTimeNanos, e);
