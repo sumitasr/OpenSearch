@@ -592,6 +592,10 @@ public class AllocationService {
              Currently AllocationService will not run any custom Allocator that implements allocateAllUnassignedShards
              */
             allocateAllUnassignedShards(allocation);
+            logger.info(
+                "[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
+            );
             return;
         }
         logger.warn("Falling back to single shard assignment since batch mode disable or multiple custom allocators set");
