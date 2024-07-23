@@ -41,6 +41,7 @@ import org.opensearch.common.Nullable;
 import org.opensearch.common.io.stream.BytesStreamOutput;
 import org.opensearch.common.logging.DeprecationLogger;
 import org.opensearch.common.path.PathTrie;
+import org.opensearch.common.unit.TimeValue;
 import org.opensearch.common.util.FeatureFlags;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.common.util.io.Streams;
@@ -291,7 +292,10 @@ public class RestController implements HttpServerTransport.Dispatcher {
     @Override
     public void dispatchRequest(RestRequest request, RestChannel channel, ThreadContext threadContext) {
         try {
+            long latencyStartTimeInNs = System.nanoTime();
             tryAllHandlers(request, channel, threadContext);
+            logger.info("[Custom Log] RestController, dispatchRequest latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
         } catch (Exception e) {
             try {
                 channel.sendResponse(new BytesRestResponse(channel, e));
@@ -378,8 +382,10 @@ public class RestController implements HttpServerTransport.Dispatcher {
                 // This header is intended for internal use only.
                 client.threadPool().getThreadContext().putHeader(SYSTEM_INDEX_ACCESS_CONTROL_HEADER_KEY, Boolean.FALSE.toString());
             }
-
+            long latencyStartTimeInNs = System.nanoTime();
             handler.handleRequest(request, responseChannel, client);
+            logger.info("[Custom Log] RestController, handleRequest latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
         } catch (Exception e) {
             responseChannel.sendResponse(new BytesRestResponse(responseChannel, e));
         }

@@ -575,6 +575,7 @@ public class AllocationService {
     }
 
     private void allocateExistingUnassignedShards(RoutingAllocation allocation) {
+        long latencyStartTimeInNs = System.nanoTime();
         allocation.routingNodes().unassigned().sort(PriorityComparator.getAllocationComparator(allocation)); // sort for priority ordering
 
         for (final ExistingShardsAllocator existingShardsAllocator : existingShardsAllocators.values()) {
@@ -613,6 +614,8 @@ public class AllocationService {
                 getAllocatorForShard(shardRouting, allocation).allocateUnassigned(shardRouting, allocation, replicaIterator);
             }
         }
+        logger.info("[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
     }
 
     private void allocateAllUnassignedShards(RoutingAllocation allocation) {

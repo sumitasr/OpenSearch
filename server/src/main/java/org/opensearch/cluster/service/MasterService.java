@@ -223,9 +223,12 @@ public class MasterService extends AbstractLifecycleComponent {
 
         @Override
         protected void run(Object batchingKey, List<? extends BatchedTask> tasks, Function<Boolean, String> taskSummaryGenerator) {
+            long latencyStartTimeInNs = System.nanoTime();
             ClusterStateTaskExecutor<Object> taskExecutor = (ClusterStateTaskExecutor<Object>) batchingKey;
             List<UpdateTask> updateTasks = (List<UpdateTask>) tasks;
             runTasks(new TaskInputs(taskExecutor, updateTasks, taskSummaryGenerator));
+            logger.info("[Custom Log] MasterService, run latency: {} ms",
+                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs));
         }
 
         class UpdateTask extends BatchedTask {
