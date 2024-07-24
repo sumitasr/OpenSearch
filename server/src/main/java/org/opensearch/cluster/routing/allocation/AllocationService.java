@@ -563,11 +563,29 @@ public class AllocationService {
             : "auto-expand replicas out of sync with number of nodes in the cluster";
         assert assertInitialized();
         long rerouteStartTimeNS = System.nanoTime();
+        long startTimeNS = System.nanoTime();
         removeDelayMarkers(allocation);
-
+        logger.info(
+            "[Custom Log] AllocationService, removeDelayMarkers latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+        );
+        startTimeNS = System.nanoTime();
         allocateExistingUnassignedShards(allocation);  // try to allocate existing shard copies first
+        logger.info(
+            "[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+        );
+        startTimeNS = System.nanoTime();
         shardsAllocator.allocate(allocation);
-        logger.info("[Custom Log] AllocationService, reroute latency: {} ms", TimeValue.nsecToMSec(System.nanoTime() - rerouteStartTimeNS));
+        logger.info(
+            "[Custom Log] AllocationService, shardsAllocator.allocate latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+        );
+
+        logger.info(
+            "[Custom Log] AllocationService, Overall reroute latency: {} ms",
+            TimeValue.nsecToMSec(System.nanoTime() - rerouteStartTimeNS)
+        );
         clusterManagerMetrics.recordLatency(
             clusterManagerMetrics.rerouteHistogram,
             (double) Math.max(0, TimeValue.nsecToMSec(System.nanoTime() - rerouteStartTimeNS))
@@ -576,7 +594,6 @@ public class AllocationService {
     }
 
     private void allocateExistingUnassignedShards(RoutingAllocation allocation) {
-        long latencyStartTimeInNs = System.nanoTime();
         allocation.routingNodes().unassigned().sort(PriorityComparator.getAllocationComparator(allocation)); // sort for priority ordering
 
         for (final ExistingShardsAllocator existingShardsAllocator : existingShardsAllocators.values()) {
@@ -592,10 +609,6 @@ public class AllocationService {
              Currently AllocationService will not run any custom Allocator that implements allocateAllUnassignedShards
              */
             allocateAllUnassignedShards(allocation);
-            logger.info(
-                "[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
-                TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
-            );
             return;
         }
         logger.warn("Falling back to single shard assignment since batch mode disable or multiple custom allocators set");
@@ -619,10 +632,6 @@ public class AllocationService {
                 getAllocatorForShard(shardRouting, allocation).allocateUnassigned(shardRouting, allocation, replicaIterator);
             }
         }
-        logger.info(
-            "[Custom Log] AllocationService, allocateExistingUnassignedShards latency: {} ms",
-            TimeValue.nsecToMSec(System.nanoTime() - latencyStartTimeInNs)
-        );
     }
 
     private void allocateAllUnassignedShards(RoutingAllocation allocation) {

@@ -201,7 +201,9 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
 
         @Override
         public void run() {
+            long startTimeInNs = System.nanoTime();
             runTask(this);
+            logger.info("[Custom Log] ClusterApplierService, run latency: {} ms", TimeValue.nsecToMSec(System.nanoTime() - startTimeInNs));
         }
     }
 

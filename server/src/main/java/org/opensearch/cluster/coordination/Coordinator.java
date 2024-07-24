@@ -1292,6 +1292,7 @@ public class Coordinator extends AbstractLifecycleComponent implements Discovery
     ) {
         try {
             synchronized (mutex) {
+                long overallStartTimeNS = System.nanoTime();
                 if (mode != Mode.LEADER || getCurrentTerm() != clusterChangedEvent.state().term()) {
                     logger.debug(
                         () -> new ParameterizedMessage(
@@ -1349,11 +1350,41 @@ public class Coordinator extends AbstractLifecycleComponent implements Discovery
                 currentPublication = Optional.of(publication);
 
                 final DiscoveryNodes publishNodes = publishRequest.getAcceptedState().nodes();
+                long startTimeNS = System.nanoTime();
                 leaderChecker.setCurrentNodes(publishNodes);
+                logger.info(
+                    "[Custom Log] Coordinator, leaderChecker.setCurrentNodes latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+                );
+                startTimeNS = System.nanoTime();
                 followersChecker.setCurrentNodes(publishNodes);
+                logger.info(
+                    "[Custom Log] Coordinator, followersChecker.setCurrentNodes latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+                );
+                startTimeNS = System.nanoTime();
                 lagDetector.setTrackedNodes(publishNodes);
+                logger.info(
+                    "[Custom Log] Coordinator, lagDetector.setTrackedNodes latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+                );
+                startTimeNS = System.nanoTime();
                 coordinationState.get().handlePrePublish(clusterState);
+                logger.info(
+                    "[Custom Log] Coordinator, coordinationState.get().handlePrePublish latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+                );
+                startTimeNS = System.nanoTime();
                 publication.start(followersChecker.getFaultyNodes());
+                logger.info(
+                    "[Custom Log] Coordinator, publication.start(followersChecker.getFaultyNodes) latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - startTimeNS)
+                );
+
+                logger.info(
+                    "[Custom Log] Coordinator::publish latency: {} ms",
+                    TimeValue.nsecToMSec(System.nanoTime() - overallStartTimeNS)
+                );
             }
         } catch (Exception e) {
             logger.debug(() -> new ParameterizedMessage("[{}] publishing failed", clusterChangedEvent.source()), e);
