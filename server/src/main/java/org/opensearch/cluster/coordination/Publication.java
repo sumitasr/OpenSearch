@@ -91,7 +91,10 @@ public abstract class Publication {
             onFaultyNode(faultyNode);
         }
         onPossibleCommitFailure();
-        publicationTargets.forEach(PublicationTarget::sendPublishRequest);
+        for (int i = 0; i < publicationTargets.size(); i++) {
+            publicationTargets.get(i).sendPublishRequest();
+            logger.debug("[Custom Log] Completed sendPublishRequest on index: {}, node: {}", i, publicationTargets.get(i).getDiscoveryNode());
+        }
     }
 
     public void cancel(String reason) {
@@ -400,7 +403,7 @@ public abstract class Publication {
                 assert state == PublicationTargetState.SENT_PUBLISH_REQUEST : state + " -> " + PublicationTargetState.WAITING_FOR_QUORUM;
                 state = PublicationTargetState.WAITING_FOR_QUORUM;
                 handlePublishResponse(response.getPublishResponse());
-
+                logger.debug("[Custom Log] publish response from [{}] completed", discoveryNode);
                 assert publicationCompletedIffAllTargetsInactiveOrCancelled();
             }
 
